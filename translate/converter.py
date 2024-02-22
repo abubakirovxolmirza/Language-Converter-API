@@ -6,10 +6,40 @@ LatinToCyrillic = {'А': 'A',  'Б': 'B',  'В': 'V',  'Г': 'G',  'Д': 'D',  '
                    'н': 'n',  'о': 'o',  'п': 'p',  'р': 'r',  'с': 's',  'т': 't',  'у': 'u',  'ф': 'f',  'х': 'h',
                    'ц': 's',  'ч': 'ch',  'ш': 'sh',  'щ': 'sh',  'ы': 'i',  'э': 'e',  'ю': 'yu',  'я': 'ya',
                    'Қ': 'k',  'c': 'c',  'Ў': "O'", 'ў': "o'", 'Ў': "Oʻ", 'ў': "oʻ"}
-CyrillicToLatin = {'A': 'А',  'B': 'Б',  'V': 'В',  'G': 'Г',  'D': 'Д',  'Ye': 'Е',  'Yo': 'Ё',  'J': 'Ж',  'Z': 'З',
-                   'I': 'И',  'Y': 'Й',  'K': 'К',  'L': 'Л',  'M': 'М',  'N': 'Н',  'O': 'О',  'P': 'П',  'R': 'Р',
-                   'S': 'С',  'T': 'Т',  'U': 'У',  'F': 'Ф',  'H': 'Х',  'Ts': 'Ц',  'Ch': 'Ч',  'Sh': 'Ш',  'E': 'Э',
-                   'Yu': 'Ю',  'Ya': 'Я', "O'": "Ў",  "Oʻ": "Ў",  'a': 'а',  'b': 'б',  'v': 'в',  'ch': 'ч',  'sh': 'ш',  'g': 'г',  'd': 'д',
-                   'ye': 'е',  'yo': 'ё',  'j': 'ж',  'z': 'з',  'i': 'и',  'y': 'й',  'k': 'к',  'l': 'л',  'm': 'м',
-                   'n': 'н',  'o': 'о', "o'": "ў",  'p': 'п',  'r': 'р',  's': 'с',  't': 'т',  'u': 'у',  'f': 'ф',  'h': 'х',
-                   'e': 'э',  'q': 'к'}
+CyrillicToLatin = {a: b for b, a in LatinToCyrillic.items()}
+
+
+def convert_text(self, context, pattern):
+    result = ''
+    mapping = None
+
+    if pattern == 'cyrillic':
+        mapping = CyrillicToLatin
+        for char in context.replace('Sh', 'Ш').replace('Sh', 'Щ').replace('Ch', 'Ч').replace('sh', 'ш').replace('sh',
+                                                                                                                'щ').replace(
+                'ch', 'ч').replace('Oʻ', "Ў"):
+            if char in mapping:
+                result += mapping[char]
+            else:
+                result += char
+    elif pattern == 'latin':
+        mapping = LatinToCyrillic
+        for char in context.replace('Ш', 'Sh').replace('Щ', 'Sh').replace('Ч', 'Ch').replace('ш', 'sh').replace('щ',
+                                                                                                                'sh').replace(
+                'ч', 'ch').replace('Ў', "Oʻ").replace('ў', "oʻ"):
+            if char in mapping:
+                result += mapping[char]
+            else:
+                result += char
+    else:
+        return 'Invalid pattern'
+
+    return result
+
+def convert_file(self, file, pattern):
+    if not file.name.endswith('.txt'):
+        return f'''Error reading file: " reading file: '''
+
+    content = file.read().decode('utf-8').lower()
+    result = self._convert_text(content, pattern)
+    return result
