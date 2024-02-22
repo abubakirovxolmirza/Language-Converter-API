@@ -80,7 +80,7 @@ DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
             'NAME': 'verceldb',
-            'HOST': 'ep-blue-queen-75951307-pooler.us-east-1.aws.neon.tech',
+            'HOST': 'ep-blue-queen-75951307-pooler.us-east-1.postgres.vercel-storage.com',
             'USER': 'default',
             'PASSWORD': 'MzTERP0jt7Ol',
         }
