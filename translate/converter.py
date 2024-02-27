@@ -1,44 +1,62 @@
-LatinToCyrillic = {'А': 'A',  'Б': 'B',  'В': 'V',  'Г': 'G',  'Д': 'D',  'Е': 'Ye',  'Ё': "YO'",  'Ж': 'J',  'З': 'Z',
-                   'И': 'I',  'Й': 'Y',  'К': 'K',  'Л': 'L',  'М': 'M',  'Н': 'N',  'О': 'O',  'П': 'P',  'Р': 'R',
-                   'С': 'S',  'Т': 'T',  'У': 'U',  'Ф': 'F',  'Х': 'H',  'Ц': 'Ts',  'Ч': 'Ch',  'Ш': 'Sh',  'Щ': 'Sh',
-                  'Э': 'E',  'Ю': 'Yu',  'Я': 'Ya',  ''  'а': 'a',  'б': 'b',  'в': 'v',  'г': 'g',  'д': 'd',
-                   'е': 'ye',  'ё': 'yo',  'ж': 'j',  'з': 'z',  'и': 'i',  'й': 'y',  'к': 'k',  'л': 'l',  'м': 'm',
-                   'н': 'n',  'о': 'o',  'п': 'p',  'р': 'r',  'с': 's',  'т': 't',  'у': 'u',  'ф': 'f',  'х': 'h',
-                     'ч': 'ch',  'ш': 'sh',  'щ': 'sh',  'ы': 'i',  'э': 'e',  'ю': 'yu',  'я': 'ya',
-                     'c': 'c',  'Ў': "O'", 'ў': "o'", 'Ў': "Oʻ", 'ў': "oʻ"}
-CyrillicToLatin = {a: b for b, a in LatinToCyrillic.items()}
+import re
+
+CyrillicToLatin = {'A': 'А', 'B': 'Б', 'V': 'В', 'G': 'Г', 'D': 'Д', 'Ye': 'Е', "YO'": 'Ё', 'J': 'Ж', 'Z': 'З',
+                   'I': 'И', 'Y': 'Й', 'K': 'К', 'L': 'Л', 'M': 'М', 'N': 'Н', 'O': 'О', 'P': 'П', 'R': 'Р', 'S': 'С',
+                   'T': 'Т', 'U': 'У', 'F': 'Ф', 'X': 'Х', 'Ts': 'Ц', 'Ch': 'Ч', 'Sh': 'Щ', 'E': 'Э', 'Yu': 'Ю',
+                   'Ya': 'Я', 'G‘': 'Ғ', 'Q': 'Қ', 'H': 'Ҳ', 'a': 'а', 'b': 'б', 'v': 'в', 'g': 'г', 'd': 'д', 'e': 'е',
+                   'yo': 'ё', 'j': 'ж','z': 'з', 'i': 'и', 'y': 'й', 'l': 'л', 'm': 'м', 'n': 'н', 'o': 'о', 'p': 'п',
+                   'r': 'р', 'k': 'к', 's': 'с', 't': 'т', 'u': 'у', 'f': 'ф', 'x': 'х', 'ch': 'ч', 'sh': 'ш',
+                   'yu': 'ю', 'ya': 'я', 'c': 'c', 'Oʻ': 'Ў', 'oʻ': 'ў', 'q': 'қ', 'g‘': 'ғ', 'h': 'ҳ', "'": 'ъ'
+                   }
+
+LatinToCyrillic = {a: b for b, a in CyrillicToLatin.items()}
 
 
 def convert_text(context, pattern):
+    """
+    Bu funksiya matnni cyril yoki latinga o'giradi.
+    Pasdagi binary_pattern va single_pattern tushunarsiz bo'lishi mumkin shuning uchun tushuntirib beraman.
+    binary_pattern: Vazifasi keylarni filtrlaydi, faqat uzunligi 1 dan katta bo'lganlarni (ya'ni, ko'p bitli
+                    ikkilik satrlarni) saqlaydi.
+                    Misol uchun: Ko'p kiril belgilar bitta latin harfga teng ya'ni 1ta uzunlikdagi 'B' = 'Б', lekin ba'zi
+                                 belgilar 2ta uzunlikdagi harflarga teng 'Ш': 'Sh', 'Ч': 'Ch'
+
+    single_pattern:
+        binary_patternga o'xshash ish qiladi lekin 1 uzunlikdagi keylarni filtirlaydi
+
+    combined_pattern: birlashtirish vazifasini bajaradi.
+    """
+
     result = ''
     mapping = None
 
     if pattern == 'cyrillic':
         mapping = CyrillicToLatin
-        for char in context.replace('Sh', 'Ш').replace('Sh', 'Щ').replace('Ch', 'Ч').replace('sh', 'ш').replace('sh',
-                                                                                                                'щ').replace(
-                'ch', 'ч').replace('Oʻ', "Ў"):
-            if char in mapping:
-                result += mapping[char]
-            else:
-                result += char
     elif pattern == 'latin':
         mapping = LatinToCyrillic
-        for char in context.replace('Ш', 'Sh').replace('Щ', 'Sh').replace('Ч', 'Ch').replace('ш', 'sh').replace('щ',
-                                                                                                                'sh').replace(
-                'ч', 'ch').replace('Ў', "Oʻ").replace('ў', "oʻ"):
-            if char in mapping:
-                result += mapping[char]
-            else:
-                result += char
     else:
         return 'Invalid pattern'
 
+    binary_pattern = '|'.join(re.escape(binary) for binary in mapping.keys() if len(binary) > 1)
+    single_pattern = '|'.join(re.escape(single) for single in mapping.keys() if len(single) == 1)
+
+    combined_pattern = f'{binary_pattern}|{single_pattern}'
+
+    def replace(match):
+        key = match.group(0)
+        if key in mapping:
+            return mapping[key]
+        else:
+            return key
+
+    result = re.sub(combined_pattern, replace, context)
+
     return result
+
 
 def convert_file(file, pattern):
     if not file.name.endswith('.txt'):
-        return f'''Error reading file: " reading file: '''
+        return 'Error: File format must be .txt'
 
     context = file.read().decode('utf-8')
     result = convert_text(context, pattern)
